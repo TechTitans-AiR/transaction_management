@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
+	"transaction_management/models"
 	"transaction_management/services"
 
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type TransactionController struct {
@@ -32,6 +35,36 @@ func (controller *TransactionController) GetTransactionsByMerchantIDHandler(w ht
 	if err := json.NewEncoder(w).Encode(transactions); err != nil {
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		fmt.Printf("Transactions: %v\n", transactions)
+		return
+	}
+}
+
+func (controller *TransactionController) CreateTransactionHandler(w http.ResponseWriter, r *http.Request) {
+	var transaction models.Transaction
+
+	err := json.NewDecoder(r.Body).Decode(&transaction)
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	currentTime := time.Now()
+	transaction.CreatedAt = currentTime
+	transaction.UpdatedAt = currentTime
+
+	transaction.ID = primitive.NilObjectID
+	fmt.Println("transaction u transaction_controller->", &transaction)
+	err = controller.transactionService.CreateTransaction(&transaction)
+	if err != nil {
+		http.Error(w, "Error creating transaction", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(transaction); err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		return
 	}
 }

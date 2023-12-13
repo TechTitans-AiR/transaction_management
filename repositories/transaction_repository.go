@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -32,4 +33,15 @@ func (repo *TransactionRepository) GetByMerchantID(merchantID string) ([]models.
 		return nil, err
 	}
 	return transactions, nil
+}
+
+func (repo *TransactionRepository) CreateTransaction(transaction *models.Transaction) error {
+	transaction.ID = primitive.NilObjectID
+
+	_, err := repo.collection.InsertOne(context.TODO(), transaction)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
