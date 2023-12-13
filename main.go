@@ -45,6 +45,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/v1/transactions/{merchantID}", transactionController.GetTransactionsByMerchantIDHandler).Methods("GET")
+	router.HandleFunc("/api/v1/transactions", transactionController.CreateTransactionHandler).Methods("POST")
 
 	port := ":8080"
 	log.Printf("Server running on port %s\n", port)
