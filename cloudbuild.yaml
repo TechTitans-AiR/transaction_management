@@ -1,0 +1,16 @@
+steps:
+  # Gradnja Docker slike
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg=MONGO_URI=$_MONGO_URI'
+      - '-t'
+      - 'gcr.io/techtitans-407214/transaction_management'
+      - '.'
+
+  # Postavljanje slike na Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/techtitans-407214/transaction_management']
+
+images:
+  - 'gcr.io/techtitans-407214/transaction_management'

@@ -47,7 +47,7 @@ func main() {
 	router.HandleFunc("/api/v1/transactions/{merchantID}", transactionController.GetTransactionsByMerchantIDHandler).Methods("GET")
 	router.HandleFunc("/api/v1/transactions/create", transactionController.CreateTransactionHandler).Methods("POST")
 
-	port := ":8082"
+	port := ":8080"
 	log.Printf("Server running on port %s\n", port)
 	log.Fatal(http.ListenAndServe(port, router))
 }
