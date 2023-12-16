@@ -25,10 +25,6 @@ func init() {
 
 func main() {
 	mongoURI := os.Getenv("MONGO_URI")
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURI))
 	if err != nil {
@@ -51,7 +47,7 @@ func main() {
 	router.HandleFunc("/api/v1/transactions/{merchantID}", transactionController.GetTransactionsByMerchantIDHandler).Methods("GET")
 	router.HandleFunc("/api/v1/transactions/create", transactionController.CreateTransactionHandler).Methods("POST")
 
-	addr := ":" + port
-	fmt.Printf("Listening on %s...\n", addr)
-	http.ListenAndServe(addr, nil)
+	port := ":8082"
+	log.Printf("Server running on port %s\n", port)
+	log.Fatal(http.ListenAndServe(port, router))
 }
