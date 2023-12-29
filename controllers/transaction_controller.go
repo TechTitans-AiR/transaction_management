@@ -68,3 +68,19 @@ func (controller *TransactionController) CreateTransactionHandler(w http.Respons
 		return
 	}
 }
+
+func (controller *TransactionController) GetAllTransactionsHandler(w http.ResponseWriter, r *http.Request) {
+    transactions, err := controller.transactionService.GetAllTransactions()
+    if err != nil {
+        http.Error(w, "Error fetching transactions", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+
+    if err := json.NewEncoder(w).Encode(transactions); err != nil {
+        http.Error(w, "Error encoding response", http.StatusInternalServerError)
+        fmt.Printf("Transactions: %v\n", transactions)
+        return
+    }
+}
