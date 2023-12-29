@@ -45,3 +45,16 @@ func (repo *TransactionRepository) CreateTransaction(transaction *models.Transac
 
 	return nil
 }
+
+func (repo *TransactionRepository) GetAllTransactions() ([]models.Transaction, error) {
+    var transactions []models.Transaction
+    cursor, err := repo.collection.Find(context.TODO(), bson.M{})
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(context.TODO())
+    if err := cursor.All(context.TODO(), &transactions); err != nil {
+        return nil, err
+    }
+    return transactions, nil
+}
