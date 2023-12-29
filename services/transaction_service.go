@@ -33,3 +33,7 @@ func (service *TransactionService) CreateTransaction(transaction *models.Transac
 
 	return nil
 }
+
+func (service *TransactionService) GetAllTransactions() ([]models.Transaction, error) {
+    return service.transactionRepo.GetAllTransactions()
+}
