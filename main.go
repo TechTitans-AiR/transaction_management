@@ -44,7 +44,8 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/v1/transactions/{merchantID}", transactionController.GetTransactionsByMerchantIDHandler).Methods("GET")
+	router.HandleFunc("/api/v1/transactions/merchant/{merchantID}", transactionController.GetTransactionsByMerchantIDHandler).Methods("GET")
+	router.HandleFunc("/api/v1/transactions/{id}", transactionController.GetTransactionByIDHandler).Methods("GET")
 	router.HandleFunc("/api/v1/transactions/create", transactionController.CreateTransactionHandler).Methods("POST")
 	router.HandleFunc("/api/v1/transactions", transactionController.GetAllTransactionsHandler).Methods("GET")
 

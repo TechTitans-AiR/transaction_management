@@ -15,6 +15,10 @@ func NewTransactionService(transactionRepo *repositories.TransactionRepository) 
 	return &TransactionService{transactionRepo: transactionRepo}
 }
 
+func (service *TransactionService) GetTransactionByID(id string) (*models.Transaction, error) {
+	return service.transactionRepo.GetByID(id)
+}
+
 func (service *TransactionService) GetTransactionsByMerchantID(merchantID string) ([]models.Transaction, error) {
 	return service.transactionRepo.GetByMerchantID(merchantID)
 }
@@ -35,5 +39,5 @@ func (service *TransactionService) CreateTransaction(transaction *models.Transac
 }
 
 func (service *TransactionService) GetAllTransactions() ([]models.Transaction, error) {
-    return service.transactionRepo.GetAllTransactions()
+	return service.transactionRepo.GetAllTransactions()
 }

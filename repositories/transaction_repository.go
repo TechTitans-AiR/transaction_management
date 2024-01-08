@@ -20,6 +20,24 @@ func NewTransactionRepository(db *mongo.Database) *TransactionRepository {
 	return &TransactionRepository{collection: collection}
 }
 
+func (repo *TransactionRepository) GetByID(id string) (*models.Transaction, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"_id": objectID}
+	var transaction models.Transaction
+
+	err = repo.collection.FindOne(context.TODO(), filter).Decode(&transaction)
+	if err != nil {
+
+		return nil, err
+	}
+
+	return &transaction, nil
+}
+
 func (repo *TransactionRepository) GetByMerchantID(merchantID string) ([]models.Transaction, error) {
 	filter := bson.M{"merchantId": merchantID}
 	fmt.Printf("Filter: %v\n", filter)
@@ -47,14 +65,14 @@ func (repo *TransactionRepository) CreateTransaction(transaction *models.Transac
 }
 
 func (repo *TransactionRepository) GetAllTransactions() ([]models.Transaction, error) {
-    var transactions []models.Transaction
-    cursor, err := repo.collection.Find(context.TODO(), bson.M{})
-    if err != nil {
-        return nil, err
-    }
-    defer cursor.Close(context.TODO())
-    if err := cursor.All(context.TODO(), &transactions); err != nil {
-        return nil, err
-    }
-    return transactions, nil
+	var transactions []models.Transaction
+	cursor, err := repo.collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+	if err := cursor.All(context.TODO(), &transactions); err != nil {
+		return nil, err
+	}
+	return transactions, nil
 }
