@@ -5,6 +5,7 @@ import (
 	"transaction_management/models"
 
 	"fmt"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,6 +19,35 @@ type TransactionRepository struct {
 func NewTransactionRepository(db *mongo.Database) *TransactionRepository {
 	collection := db.Collection("transactions")
 	return &TransactionRepository{collection: collection}
+}
+func (repo *TransactionRepository) Search(merchantID, description string, createdAt time.Time) ([]models.Transaction, error) {
+	filter := bson.M{}
+
+	if merchantID != "" {
+		filter["merchantId"] = merchantID
+	}
+
+	if description != "" {
+		filter["description"] = primitive.Regex{Pattern: description, Options: "i"}
+	}
+
+	if !createdAt.IsZero() {
+		filter["createdAt"] = bson.M{"$gte": createdAt, "$lt": createdAt.Add(24 * time.Hour)}
+	}
+
+	var transactions []models.Transaction
+
+	cursor, err := repo.collection.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	if err := cursor.All(context.TODO(), &transactions); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
 }
 
 func (repo *TransactionRepository) GetByID(id string) (*models.Transaction, error) {

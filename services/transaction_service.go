@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"time"
 	"transaction_management/models"
 	"transaction_management/repositories"
 )
@@ -21,6 +22,9 @@ func (service *TransactionService) GetTransactionByID(id string) (*models.Transa
 
 func (service *TransactionService) GetTransactionsByMerchantID(merchantID string) ([]models.Transaction, error) {
 	return service.transactionRepo.GetByMerchantID(merchantID)
+}
+func (service *TransactionService) SearchTransactions(merchantID, description string, createdAt time.Time) ([]models.Transaction, error) {
+	return service.transactionRepo.Search(merchantID, description, createdAt)
 }
 
 func (service *TransactionService) CreateTransaction(transaction *models.Transaction) error {

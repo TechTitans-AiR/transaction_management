@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 	"transaction_management/models"
@@ -35,6 +36,40 @@ func (controller *TransactionController) GetTransactionByIDHandler(w http.Respon
 	if err := json.NewEncoder(w).Encode(transaction); err != nil {
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		fmt.Printf("Transaction: %v\n", transaction)
+		return
+	}
+}
+
+func (controller *TransactionController) SearchTransactionsHandler(w http.ResponseWriter, r *http.Request) {
+	var requestBody struct {
+		MerchantID  string `json:"merchantId"`
+		Description string `json:"description"`
+		CreatedAt   string `json:"createdAt"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil && err != io.EOF {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	createdAt, err := time.Parse("2006-01-02", requestBody.CreatedAt)
+	if err != nil && requestBody.CreatedAt != "" {
+		http.Error(w, "Invalid date format", http.StatusBadRequest)
+		return
+	}
+
+	transactions, err := controller.transactionService.SearchTransactions(requestBody.MerchantID, requestBody.Description, createdAt)
+	if err != nil {
+		http.Error(w, "Error searching transactions", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(transactions); err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		fmt.Printf("Transactions: %v\n", transactions)
 		return
 	}
 }
