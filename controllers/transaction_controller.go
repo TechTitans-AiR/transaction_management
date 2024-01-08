@@ -19,6 +19,25 @@ type TransactionController struct {
 func NewTransactionController(transactionService *services.TransactionService) *TransactionController {
 	return &TransactionController{transactionService: transactionService}
 }
+func (controller *TransactionController) GetTransactionByIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	transaction, err := controller.transactionService.GetTransactionByID(id)
+	if err != nil {
+
+		http.Error(w, "Error fetching transaction", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(transaction); err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		fmt.Printf("Transaction: %v\n", transaction)
+		return
+	}
+}
 
 func (controller *TransactionController) GetTransactionsByMerchantIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -70,17 +89,17 @@ func (controller *TransactionController) CreateTransactionHandler(w http.Respons
 }
 
 func (controller *TransactionController) GetAllTransactionsHandler(w http.ResponseWriter, r *http.Request) {
-    transactions, err := controller.transactionService.GetAllTransactions()
-    if err != nil {
-        http.Error(w, "Error fetching transactions", http.StatusInternalServerError)
-        return
-    }
+	transactions, err := controller.transactionService.GetAllTransactions()
+	if err != nil {
+		http.Error(w, "Error fetching transactions", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 
-    if err := json.NewEncoder(w).Encode(transactions); err != nil {
-        http.Error(w, "Error encoding response", http.StatusInternalServerError)
-        fmt.Printf("Transactions: %v\n", transactions)
-        return
-    }
+	if err := json.NewEncoder(w).Encode(transactions); err != nil {
+		http.Error(w, "Error encoding response", http.StatusInternalServerError)
+		fmt.Printf("Transactions: %v\n", transactions)
+		return
+	}
 }
