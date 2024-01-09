@@ -19,18 +19,37 @@ func NewTransactionService(transactionRepo *repositories.TransactionRepository) 
 	return &TransactionService{transactionRepo: transactionRepo}
 }
 
-func (service *TransactionService) GetTransactionByID(id string, token string) (*models.Transaction, error) {
+func (service *TransactionService) GetTransactionByID(id, token string) (*models.Transaction, error) {
 	userRole, err := service.CheckUserRoleFromToken(token)
 	if err != nil {
 		return nil, err
 	}
 
-	if userRole != "admin" {
-		return nil, errors.New("only admin users can perform this action")
+	if userRole == "admin" {
+		return service.transactionRepo.GetByID(id)
 	}
 
-	return service.transactionRepo.GetByID(id)
+	if userRole == "merchant" {
+		merchantIDFromToken, err := service.GetMerchantIDFromToken(token)
+		if err != nil {
+			return nil, errors.New("error getting merchant ID from token")
+		}
+
+		transaction, err := service.transactionRepo.GetByID(id)
+		if err != nil {
+			return nil, err
+		}
+
+		if transaction.MerchantID == merchantIDFromToken {
+			return transaction, nil
+		}
+
+		return nil, errors.New("unauthorized access to transaction")
+	}
+
+	return nil, errors.New("unknown user role")
 }
+
 
 
 func (service *TransactionService) GetTransactionsByMerchantID(token, requestedMerchantID string) ([]models.Transaction, error) {
