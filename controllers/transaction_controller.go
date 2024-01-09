@@ -21,13 +21,14 @@ func NewTransactionController(transactionService *services.TransactionService) *
 	return &TransactionController{transactionService: transactionService}
 }
 func (controller *TransactionController) GetTransactionByIDHandler(w http.ResponseWriter, r *http.Request) {
+	token := r.Header.Get("Authorization")
+
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	transaction, err := controller.transactionService.GetTransactionByID(id)
+	transaction, err := controller.transactionService.GetTransactionByID(id, token)
 	if err != nil {
-
-		http.Error(w, "Error fetching transaction", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -73,14 +74,15 @@ func (controller *TransactionController) SearchTransactionsHandler(w http.Respon
 		return
 	}
 }
-
 func (controller *TransactionController) GetTransactionsByMerchantIDHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	merchantID := vars["merchantID"]
 
-	transactions, err := controller.transactionService.GetTransactionsByMerchantID(merchantID)
+	token := r.Header.Get("Authorization")
+
+	transactions, err := controller.transactionService.GetTransactionsByMerchantID(token, merchantID)
 	if err != nil {
-		http.Error(w, "Error fetching transactions", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
@@ -124,9 +126,11 @@ func (controller *TransactionController) CreateTransactionHandler(w http.Respons
 }
 
 func (controller *TransactionController) GetAllTransactionsHandler(w http.ResponseWriter, r *http.Request) {
-	transactions, err := controller.transactionService.GetAllTransactions()
+	token := r.Header.Get("Authorization")
+
+	transactions, err := controller.transactionService.GetAllTransactions(token)
 	if err != nil {
-		http.Error(w, "Error fetching transactions", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
