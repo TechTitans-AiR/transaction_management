@@ -150,7 +150,10 @@ func (controller *TransactionController) CreateTransactionWithCardHandler(w http
 		return
 	}
 
-	bankHostResponse, err := http.Post("http://localhost:8084/sendToBankHostSimulator", "application/json", bytes.NewBuffer(cardPayloadBytes))
+	//DOCKER
+	bankHostResponse, err := http.Post("http://host.docker.internal:8084/sendToBankHostSimulator", "application/json", bytes.NewBuffer(cardPayloadBytes))
+	//LOCALHOST
+	//bankHostResponse, err := http.Post("http://localhost:8084/sendToBankHostSimulator", "application/json", bytes.NewBuffer(cardPayloadBytes))
 	if err != nil {
 		fmt.Println("Error sending request to bank host:", err)
 		http.Error(w, "Error sending request to bank host", http.StatusInternalServerError)
