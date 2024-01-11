@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -109,7 +110,6 @@ func (controller *TransactionController) CreateTransactionHandler(w http.Respons
 	transaction.UpdatedAt = currentTime
 
 	transaction.ID = primitive.NilObjectID
-	fmt.Println("transaction u transaction_controller->", &transaction)
 	err = controller.transactionService.CreateTransaction(&transaction)
 	if err != nil {
 		http.Error(w, "Error creating transaction", http.StatusInternalServerError)
@@ -123,6 +123,81 @@ func (controller *TransactionController) CreateTransactionHandler(w http.Respons
 		http.Error(w, "Error encoding response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (controller *TransactionController) CreateTransactionWithCardHandler(w http.ResponseWriter, r *http.Request) {
+	var transaction models.TransactionWithCard
+
+	decoder := json.NewDecoder(r.Body)
+
+	if err := decoder.Decode(&transaction); err != nil {
+		fmt.Println("Error decoding JSON:", err)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	cardPayload := models.Card{
+		CardNumber:     transaction.Card.CardNumber,
+		ExpirationDate: transaction.Card.ExpirationDate,
+		Balance:        transaction.Card.Balance,
+		CVC:            transaction.Card.CVC,
+	}
+
+	cardPayloadBytes, err := json.Marshal(cardPayload)
+	if err != nil {
+		fmt.Println("Error encoding card payload:", err)
+		http.Error(w, "Error encoding card payload", http.StatusInternalServerError)
+		return
+	}
+
+	bankHostResponse, err := http.Post("http://localhost:8084/sendToBankHostSimulator", "application/json", bytes.NewBuffer(cardPayloadBytes))
+	if err != nil {
+		fmt.Println("Error sending request to bank host:", err)
+		http.Error(w, "Error sending request to bank host", http.StatusInternalServerError)
+		return
+	}
+	defer bankHostResponse.Body.Close()
+
+	var bankHostResponseBody map[string]string
+	if err := json.NewDecoder(bankHostResponse.Body).Decode(&bankHostResponseBody); err != nil {
+		fmt.Println("Error decoding bank host response:", err)
+		http.Error(w, "Error decoding bank host response", http.StatusInternalServerError)
+		return
+	}
+
+	status, ok := bankHostResponseBody["status"]
+	if !ok {
+		fmt.Println("Status not found in bank host response")
+		http.Error(w, "Status not found in bank host response", http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("STATUS:", status)
+	if status == "declined" {
+		http.Error(w, "Payment declined", http.StatusBadRequest)
+		return
+	} else {
+		currentTime := time.Now()
+		transaction.CreatedAt = currentTime
+		transaction.UpdatedAt = currentTime
+
+		transaction.ID = primitive.NilObjectID
+		fmt.Println("transaction u transaction_controller->", &transaction, "%n")
+		fmt.Println("transaction u transaction_controller2->", transaction, "%n")
+		err = controller.transactionService.CreateTransactionWithCard(&transaction)
+		if err != nil {
+			http.Error(w, "Error creating transaction", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+
+		if err := json.NewEncoder(w).Encode(transaction); err != nil {
+			http.Error(w, "Error encoding response", http.StatusInternalServerError)
+			return
+		}
+	}
+
 }
 
 func (controller *TransactionController) GetAllTransactionsHandler(w http.ResponseWriter, r *http.Request) {
