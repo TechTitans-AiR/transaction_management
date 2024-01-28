@@ -33,3 +33,9 @@ type Transaction struct {
 	CreatedAt   time.Time          `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 	UpdatedAt   time.Time          `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
 }
+
+type Bank struct {
+	Name     string `json:"name"`
+	Mark     []int  `json:"mark"`
+	Endpoint string `json:"endpoint"`
+}
