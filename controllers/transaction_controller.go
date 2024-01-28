@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 	"transaction_management/models"
 	"transaction_management/services"
@@ -125,7 +128,12 @@ func (controller *TransactionController) CreateTransactionHandler(w http.Respons
 	}
 }
 
+var banks []models.Bank
+
 func (controller *TransactionController) CreateTransactionWithCardHandler(w http.ResponseWriter, r *http.Request) {
+	if err := loadBanksData(); err != nil {
+		fmt.Println("Error loading banks data:", err)
+	}
 	var transaction models.TransactionWithCard
 
 	decoder := json.NewDecoder(r.Body)
@@ -150,8 +158,16 @@ func (controller *TransactionController) CreateTransactionWithCardHandler(w http
 		return
 	}
 
+	bankEndpoint, err := chooseBankEndpoint(transaction.Card.CardNumber)
+	if err != nil {
+		fmt.Println("Error choosing bank endpoint:", err)
+		http.Error(w, "Bank with provided card number is not recognized", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("ODABRAO BANKU", bankEndpoint)
 	//DOCKER
-	bankHostResponse, err := http.Post("http://host.docker.internal:8084/sendToBankHostSimulator", "application/json", bytes.NewBuffer(cardPayloadBytes))
+	bankHostResponse, err := http.Post(bankEndpoint, "application/json", bytes.NewBuffer(cardPayloadBytes))
 	//LOCALHOST
 	//bankHostResponse, err := http.Post("http://localhost:8084/sendToBankHostSimulator", "application/json", bytes.NewBuffer(cardPayloadBytes))
 	if err != nil {
@@ -203,6 +219,26 @@ func (controller *TransactionController) CreateTransactionWithCardHandler(w http
 
 }
 
+func chooseBankEndpoint(cardNumber string) (string, error) {
+	cardNumber = strings.ReplaceAll(cardNumber, " ", "")
+
+	firstSixDigits, err := strconv.Atoi(cardNumber[:6])
+	if err != nil {
+		return "", fmt.Errorf("Error converting first six digits to integer: %v", err)
+	}
+
+	for _, bank := range banks {
+		for _, mark := range bank.Mark {
+			if mark == firstSixDigits {
+				println("BANKA ->", bank.Name)
+				return bank.Endpoint, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("There is no designated bank for that card - %s", firstSixDigits)
+}
+
 func (controller *TransactionController) GetAllTransactionsHandler(w http.ResponseWriter, r *http.Request) {
 	token := r.Header.Get("Authorization")
 
@@ -219,4 +255,17 @@ func (controller *TransactionController) GetAllTransactionsHandler(w http.Respon
 		fmt.Printf("Transactions: %v\n", transactions)
 		return
 	}
+}
+
+func loadBanksData() error {
+	file, err := ioutil.ReadFile("banks.json")
+	if err != nil {
+		return fmt.Errorf("Error reading banks.json: %v", err)
+	}
+
+	if err := json.Unmarshal(file, &banks); err != nil {
+		return fmt.Errorf("Error unmarshaling banks.json: %v", err)
+	}
+
+	return nil
 }
