@@ -48,6 +48,7 @@ func main() {
 	router.HandleFunc("/api/v1/transactions/search", transactionController.SearchTransactionsHandler).Methods("POST")
 	router.HandleFunc("/api/v1/transactions/{id}", transactionController.GetTransactionByIDHandler).Methods("GET")
 	router.HandleFunc("/api/v1/transactions/create", transactionController.CreateTransactionHandler).Methods("POST")
+	router.HandleFunc("/api/v1/transactions/create/card", transactionController.CreateTransactionWithCardHandler).Methods("POST")
 	router.HandleFunc("/api/v1/transactions", transactionController.GetAllTransactionsHandler).Methods("GET")
 
 	port := ":8082"

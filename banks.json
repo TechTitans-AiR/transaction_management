@@ -1,0 +1,12 @@
+[
+    {
+        "Name": "ERSTE AND STEIERMARKISCHE BANK D.D.",
+        "Mark": [414815,424472,425750,429588,431610,431868,432048,460336,462765,472801,499836],
+        "Endpoint": "http://host.docker.internal:8084/sendToBankHostSimulator"
+    },
+    {
+        "Name": "PRIVREDNA BANKA ZAGREB D.D.",
+        "Mark": [414085,414086,426733,438969,448375,457418,460331,462280],
+        "Endpoint": "http://host.docker.internal:8087/sendToBankHostSimulator2"
+    }
+]
